@@ -1,4 +1,4 @@
-package com.moa.category.global.vo;
+package com.moa.category;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
