@@ -7,10 +7,10 @@ spring:
   profiles:
     default: local
   jpa:
-
     properties:
       hibernate:
         default_batch_fetch_size: 100
+      
 
 springdoc:
   swagger-ui:

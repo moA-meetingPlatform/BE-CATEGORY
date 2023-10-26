@@ -13,14 +13,14 @@ spring:
   datasource:
     master:
       hikari:
-        jdbc-url: jdbc:mysql://localhost:3306/moa_meeting
+        jdbc-url: jdbc:mysql://localhost:3306/moa_category
         read-only: false
         username: root
         password: 1234
         driver-class-name: com.mysql.cj.jdbc.Driver
     slave:
       hikari:
-        jdbc-url: jdbc:mysql://localhost:3306/moa_meeting
+        jdbc-url: jdbc:mysql://localhost:3306/moa_category
         read-only: true
         username: root
         password: 1234
