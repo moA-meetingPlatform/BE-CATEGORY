@@ -1,4 +1,4 @@
-package com.moa.category.config;
+package com.moa.config;
 
 
 import lombok.extern.slf4j.Slf4j;

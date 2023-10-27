@@ -1,7 +1,7 @@
-package com.moa.category.global.vo;
+package com.moa.global.vo;
 
 
-import com.moa.category.global.domain.ErrorCode;
+import com.moa.global.domain.ErrorCode;
 
 
 public record ApiResult<T>(

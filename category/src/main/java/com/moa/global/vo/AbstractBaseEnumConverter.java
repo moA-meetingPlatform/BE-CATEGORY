@@ -1,7 +1,7 @@
-package com.moa.category.global.vo;
+package com.moa.global.vo;
 
 
-import com.moa.category.global.domain.BaseEnum;
+import com.moa.global.domain.BaseEnum;
 import jakarta.persistence.AttributeConverter;
 
 import java.util.Arrays;

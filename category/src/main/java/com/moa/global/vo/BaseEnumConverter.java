@@ -1,4 +1,4 @@
-package com.moa.category.global.vo;
+package com.moa.global.vo;
 
 
 public class BaseEnumConverter {

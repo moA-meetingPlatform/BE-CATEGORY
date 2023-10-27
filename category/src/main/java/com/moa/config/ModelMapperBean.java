@@ -1,4 +1,4 @@
-package com.moa.category.config;
+package com.moa.config;
 
 
 import org.modelmapper.ModelMapper;

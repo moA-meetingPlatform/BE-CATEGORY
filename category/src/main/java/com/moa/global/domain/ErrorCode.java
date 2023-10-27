@@ -1,4 +1,4 @@
-package com.moa.category.global.domain;
+package com.moa.global.domain;
 
 
 import lombok.Getter;

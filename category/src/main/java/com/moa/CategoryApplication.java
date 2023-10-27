@@ -1,4 +1,4 @@
-package com.moa.category;
+package com.moa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
