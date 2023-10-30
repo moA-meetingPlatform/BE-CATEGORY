@@ -1,7 +1,7 @@
 package com.moa.global.vo;
 
 
-import com.moa.global.domain.ErrorCode;
+import com.moa.global.config.exception.ErrorCode;
 
 
 public record ApiResult<T>(
@@ -12,7 +12,10 @@ public record ApiResult<T>(
 ) {
 
 	public static ApiResult<Void> ofError(ErrorCode code) {
-		return new ApiResult<>(null, false, code.getDescription());
+
+		return new ApiResult<>(
+				null, false, code.getDescription()
+		);
 	}
 
 

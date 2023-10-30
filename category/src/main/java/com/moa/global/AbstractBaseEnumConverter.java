@@ -1,13 +1,13 @@
-package com.moa.global.vo;
+package com.moa.global;
 
 
-import com.moa.global.domain.BaseEnum;
 import jakarta.persistence.AttributeConverter;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 
+//구현체에서 @Converter(autoApply=true) 지정할것
 public abstract class AbstractBaseEnumConverter<E extends Enum<E> & BaseEnum<T, K>, T, K> implements AttributeConverter<E, T> {
 
 	private final Class<E> clazz;
@@ -30,9 +30,9 @@ public abstract class AbstractBaseEnumConverter<E extends Enum<E> & BaseEnum<T, 
 			return null;
 		}
 		return Arrays.stream(clazz.getEnumConstants())
-			.filter(e -> e.getCode().equals(dbData))
-			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("Unknown code: " + dbData));
+				.filter(e -> e.getCode().equals(dbData))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Unknown code: " + dbData));
 	}
 
 }

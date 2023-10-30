@@ -1,8 +1,7 @@
-package com.moa.global.vo;
+package com.moa.global.config.exception;
 
 
-import com.moa.global.domain.CustomException;
-import com.moa.global.domain.ErrorCode;
+import com.moa.global.vo.ApiResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.moa.global.domain;
+package com.moa.global.config.exception;
 
 
 import lombok.Getter;

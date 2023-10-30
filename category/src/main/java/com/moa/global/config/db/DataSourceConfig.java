@@ -1,4 +1,4 @@
-package com.moa.config;
+package com.moa.global.config.db;
 
 
 import com.google.common.collect.ImmutableMap;
