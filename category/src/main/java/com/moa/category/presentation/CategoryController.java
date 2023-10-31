@@ -1,6 +1,7 @@
 package com.moa.category.presentation;
 import com.moa.category.application.CategoryService;
 import com.moa.category.vo.CategoriesListOut;
+import com.moa.global.vo.ApiResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -20,9 +21,7 @@ public class CategoryController {
 
     @GetMapping("/categories")
     public ResponseEntity<?>getCategoriesList(){
-
         List<CategoriesListOut> categoriesList = categoryService.categoriesList();
-
-        return ResponseEntity.ok(ResponseOut.success(eventEndListOut));
+        return ResponseEntity.ok(ApiResult.ofSuccess(categoriesList));
     }
 }

@@ -15,9 +15,9 @@ public class ThemeCategory extends BaseDateTime {
     private Integer id; //주제카테고리 id
     @Column(nullable = false, length =45, name = "category_name")
     private String categoryName;   //카테고리명
-    @Column(nullable = false, name = "category_use", columnDefinition = "TINYINT(1)")
-    private Boolean categoryUse;    // 카테고리 사용여부 -사용중:1 사용X:0
+    @Column(nullable = false, name = "category_soft_delete", columnDefinition = "TINYINT(1)")
+    private Boolean categorySoftDelete;    // 카테고리 사용여부 -사용중:1 사용X:0
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="category_id")
-    private ThemeCategory themeCategory;    //자기 참조 : 상위카테고리 id, null 가능
+    @JoinColumn(name="top_category_id")
+    private ThemeCategory topCategory;    //자기 참조 : 상위카테고리 id, null 가능
 }

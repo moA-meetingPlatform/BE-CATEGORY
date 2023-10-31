@@ -20,7 +20,7 @@ public record ApiResult<T>(
 
 
 	public static <T> ApiResult<T> ofSuccess(T data) {
-		return new ApiResult<>(data, true, "success");
+		return new ApiResult<>( data,true, "success");
 	}
 
 }
