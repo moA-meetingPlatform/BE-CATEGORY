@@ -1,15 +1,14 @@
-package com.moa.category.dto;
+package com.moa.category.vo;
 
 import lombok.*;
-import java.time.LocalDateTime;
-@Builder
-@ToString
+
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryMeetingListDto {
-    private Long categoryMeetingListId; //카테고리 모임 리스트 Id
+public class MeetingCategoryIn {
+    private Long categoryMeetingId; //카테고리 모임 리스트 Id
     private Integer topCategoryId;   //상위카테고리 Id
     private Integer subCategoryId;  //하위 카테고리 Id
 }
