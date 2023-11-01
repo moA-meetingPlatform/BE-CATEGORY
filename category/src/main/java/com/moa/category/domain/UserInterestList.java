@@ -10,7 +10,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInterest {
+public class UserInterestList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;    //카테고리 모임 리스트

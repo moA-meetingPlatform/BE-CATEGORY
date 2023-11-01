@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ThemeCategory extends BaseDateTime {
+public class MeetingThemeCategory extends BaseDateTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id; //주제카테고리 id
@@ -19,5 +19,5 @@ public class ThemeCategory extends BaseDateTime {
     private Boolean categorySoftDelete;    // 카테고리 사용여부 -사용중:1 사용X:0
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="top_category_id")
-    private ThemeCategory topCategory;    //자기 참조 : 상위카테고리 id, null 가능
+    private MeetingThemeCategory topCategory;    //자기 참조 : 상위카테고리 id, null 가능
 }

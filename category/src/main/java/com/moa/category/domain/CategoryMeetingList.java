@@ -18,6 +18,11 @@ public class CategoryMeetingList extends BaseDateTime {
     @Column(nullable = false, name = "sub_category_id")
     private Integer subCategoryId;   //하위카테고리 id
     @Column(nullable = false, name = "meeting_id")
-    private Long meetingId;
-    //todo : 모임 종료, 모임 취소시 delete : 강사님이 말씀핟셨던것처럼 지우는것보다 tinyint로해서 종료나 취소나 삭제시 0으로 바꾸는게 어떨까
+    private Long meetingId; //모임 id
+    @Column(nullable = false, name = "enable", columnDefinition = "TINYINT(1) default 1")
+    private Boolean enable;     //모임 종료, 모임 취소, 모임 삭제시 : 0으로 바꾸기
+
+    public void disable() {
+        this.enable = false;
+    }
 }

@@ -4,6 +4,7 @@ import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.vo.CategoriesListOut;
 import com.moa.category.vo.CreateThemeCategoryIn;
+import com.moa.category.vo.DisableMeetingCategoryIn;
 
 import java.util.List;
 
@@ -15,4 +16,8 @@ public interface CategoryService {
     void createThemeCategory(CreateThemeCategoryIn createThemeCategoryIn);
 
     void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto);
+
+    void disableMeetingCategory(Long meetingId);
+
+    void updateUserInterests(UserInterestGetDto map);
 }

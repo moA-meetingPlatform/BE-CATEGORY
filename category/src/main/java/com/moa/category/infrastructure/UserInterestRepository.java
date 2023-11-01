@@ -1,7 +1,7 @@
 package com.moa.category.infrastructure;
 
-import com.moa.category.domain.UserInterest;
+import com.moa.category.domain.UserInterestList;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserInterestRepository extends JpaRepository<UserInterest,Long> {
+public interface UserInterestRepository extends JpaRepository<UserInterestList,Long> {
 }

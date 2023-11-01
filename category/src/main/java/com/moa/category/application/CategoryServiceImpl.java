@@ -1,9 +1,8 @@
 package com.moa.category.application;
 
-
 import com.moa.category.domain.CategoryMeetingList;
-import com.moa.category.domain.ThemeCategory;
-import com.moa.category.domain.UserInterest;
+import com.moa.category.domain.MeetingThemeCategory;
+import com.moa.category.domain.UserInterestList;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
@@ -33,15 +32,15 @@ public class CategoryServiceImpl implements CategoryService{
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보내는 코드
     @Override
     public List<CategoriesListOut> categoriesList() {
-        List<ThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryUseTrue();
+        List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryUseTrue();
 
-        Map<Integer, List<ThemeCategory>> groupedData = themeCategories.stream()
+        Map<Integer, List<MeetingThemeCategory>> groupedData = themeCategories.stream()
                 .filter(tc -> tc.getTopCategory() != null && tc.getId() != null) // 상위 카테고리가 null이 아닌 것만 필터링
                 .collect(Collectors.groupingBy(tc -> tc.getTopCategory().getId()));
 
         return groupedData.values().stream()
                 .map(tcs -> {
-                    ThemeCategory topCategory = tcs.get(0).getTopCategory();
+                    MeetingThemeCategory topCategory = tcs.get(0).getTopCategory();
                     List<CategoriesListOut.SubCategory> subCategories = tcs.stream()
                             .map(tc -> new CategoriesListOut.SubCategory(tc.getId(), tc.getCategoryName()))
                             .collect(Collectors.toList());
@@ -58,8 +57,8 @@ public class CategoryServiceImpl implements CategoryService{
             //주제 카테고리 수가 5개 미만이거나 10개 초과일 경우 예외처리
         }
 
-        List<UserInterest> userInterests = userInterestGetDto.getUser_category_id().stream()
-                .map(categoryId -> UserInterest.builder()
+        List<UserInterestList> userInterests = userInterestGetDto.getUser_category_id().stream()
+                .map(categoryId -> UserInterestList.builder()
                         .userUuid(userInterestGetDto.getUserUuid())
                         //todo : uuid를 어떻게 처리할지 몰라 일단 header에서 받는걸로 했음. crud후, 누리님과 이야기해서 수정해야함. :security
                         .userCategoryId(categoryId) // 유저가 선택한 카테고리(관심사) id
@@ -71,7 +70,7 @@ public class CategoryServiceImpl implements CategoryService{
     // 관리자가 주제 카테고리 생성
     @Override
     public void createThemeCategory(CreateThemeCategoryIn createThemeCategoryIn) {
-        ThemeCategory topCategory = null;
+        MeetingThemeCategory topCategory = null;
 
         //상위 카테고리 ID가 제공된 경우, 해당 ID의 카테고리를 사용
         if (createThemeCategoryIn.getTopCategoryId() != null) {
@@ -80,7 +79,7 @@ public class CategoryServiceImpl implements CategoryService{
         }
         // ID가 없고 상위 카테고리 이름이 제공된 경우, 새로운 상위 카테고리를 생성
         else if (createThemeCategoryIn.getTopCategoryName() != null) {
-            topCategory = ThemeCategory.builder()
+            topCategory = MeetingThemeCategory.builder()
                     .categoryName(createThemeCategoryIn.getTopCategoryName())
                     .categorySoftDelete(true)
                     .build();
@@ -92,7 +91,7 @@ public class CategoryServiceImpl implements CategoryService{
             if (topCategory == null) {
                 throw new IllegalArgumentException("상위 카테고리가 없으면 하위 카테고리를 생성할 수 없습니다.");
             }
-            ThemeCategory subCategory = ThemeCategory.builder()
+            MeetingThemeCategory subCategory = MeetingThemeCategory.builder()
                     .categoryName(createThemeCategoryIn.getSubCategoryName())
                     .categorySoftDelete(true)
                     .topCategory(topCategory)
@@ -112,6 +111,19 @@ public class CategoryServiceImpl implements CategoryService{
                 .build();
 
         categoryMeetingListRepository.save(categoryMeetingList);
+    }
+
+    // 모임 취소, 모임종료, 모임삭제시, enable을 0으로 바꾸는 코드
+    @Override
+    public void disableMeetingCategory(Long meetingId) {
+        CategoryMeetingList categoryMeetingList = categoryMeetingListRepository.findById(meetingId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 모임의 카테고리가 존재하지 않습니다."));
+        categoryMeetingList.disable();
+    }
+
+    @Override
+    public void updateUserInterests(UserInterestGetDto map) {
+
     }
 
 }
