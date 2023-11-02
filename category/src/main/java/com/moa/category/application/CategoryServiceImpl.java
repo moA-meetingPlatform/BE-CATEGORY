@@ -11,6 +11,7 @@ import com.moa.category.infrastructure.UserInterestRepository;
 import com.moa.category.vo.CategoriesListOut;
 import com.moa.category.vo.CreateThemeCategoryIn;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService{
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보내는 코드
     @Override
     public List<CategoriesListOut> categoriesList() {
-        List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryUseTrue();
+        List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryNotDeleted();
 
         Map<Integer, List<MeetingThemeCategory>> groupedData = themeCategories.stream()
                 .filter(tc -> tc.getTopCategory() != null && tc.getId() != null) // 상위 카테고리가 null이 아닌 것만 필터링
@@ -122,8 +123,24 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
-    public void updateUserInterests(UserInterestGetDto map) {
+    public void updateUserInterests(UserInterestGetDto userInterestGetDto) {
 
+    }
+
+    @Override
+    public List<Long> getMeetingListByCategory(int categoryId) {
+        List<CategoryMeetingList> categoryMeetingLists;
+        MeetingThemeCategory category = themeCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
+        if (category.getTopCategory() == null) { // 상위 카테고리가 null이면, 입력된 카테고리는 상위 카테고리
+            categoryMeetingLists = categoryMeetingListRepository.findByTopCategoryIdAndEnableIsTrue(categoryId);
+        } else { // 그렇지 않다면, 입력된 카테고리는 하위 카테고리
+            categoryMeetingLists = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId);
+        }
+
+        return categoryMeetingLists.stream()
+                .map(CategoryMeetingList::getMeetingId)
+                .collect(Collectors.toList());
     }
 
 }

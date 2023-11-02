@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/category")
 public class CategoryController {
     private final CategoryService categoryService;
     private final ModelMapper modelMapper;
@@ -40,6 +40,7 @@ public class CategoryController {
         categoryService.createUserInterests(modelMapper.map(userInterestsIn, UserInterestGetDto.class));
         return ResponseEntity.ok(ApiResult.ofSuccess(null));
     }
+    // 유저 관심사 변경
     @PutMapping("/user/categories")
     public ResponseEntity<?>updateUserInterests(@RequestBody UserInterestsIn userInterestsIn){
         categoryService.updateUserInterests(modelMapper.map(userInterestsIn, UserInterestGetDto.class));
@@ -56,5 +57,11 @@ public class CategoryController {
     public ResponseEntity<?>disableMeetingCategory(@RequestBody DisableMeetingCategoryIn disableMeetingCategoryIn){
         categoryService.disableMeetingCategory(disableMeetingCategoryIn.getMeetingId());
         return ResponseEntity.ok(ApiResult.ofSuccess(null));
+    }
+    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주기
+    @GetMapping("/meeting/category/{categoryId}")
+    public ResponseEntity<?> getMeetingListByCategory(@PathVariable("categoryId") int categoryId) {
+        List<Long> meetingList = categoryService.getMeetingListByCategory(categoryId);
+        return ResponseEntity.ok(ApiResult.ofSuccess(meetingList));
     }
 }

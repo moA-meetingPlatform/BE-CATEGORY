@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface ThemeCategoryRepository extends JpaRepository<MeetingThemeCategory,Integer> {
     @Query("SELECT tc FROM MeetingThemeCategory tc WHERE tc.categorySoftDelete = true")
-    List<MeetingThemeCategory> findAllByCategoryUseTrue();
+    List<MeetingThemeCategory> findAllByCategoryNotDeleted();
 }
