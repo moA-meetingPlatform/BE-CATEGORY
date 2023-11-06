@@ -5,10 +5,13 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: awdfaf/be-category
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
+
+container:
+  port: 8000
 
 imagePullSecrets: []
 nameOverride: ""
@@ -41,7 +44,8 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8000
+  targetPort: 8000
 
 ingress:
   enabled: false
