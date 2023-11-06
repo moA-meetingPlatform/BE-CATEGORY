@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/category")
 @Slf4j
 @RequiredArgsConstructor
 public class HealthCheckController {
 
     @GetMapping("/test")
     public ResponseEntity<ApiResult<String>> test() {
-        return ResponseEntity.ok(ApiResult.ofSuccess("user test"));
+        return ResponseEntity.ok(ApiResult.ofSuccess("category test"));
     }
 
 }

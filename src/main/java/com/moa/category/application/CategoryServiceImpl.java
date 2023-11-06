@@ -16,8 +16,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -124,7 +126,30 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public void updateUserInterests(UserInterestGetDto userInterestGetDto) {
+        // UUID로 기존 선택된 카테고리 리스트를 가져옵니다.
+        List<UserInterestList> existingInterests = userInterestRepository.findByUserUuid(userInterestGetDto.getUserUuid());
 
+        // 기존 리스트를 ID로 변환합니다.
+        Set<Integer> existingCategoryIds = existingInterests.stream()
+                .map(UserInterestList::getUserCategoryId)
+                .collect(Collectors.toSet());
+
+        // 새 카테고리 리스트
+        Set<Integer> newUserCategoryIds = new HashSet<>(userInterestGetDto.getUser_category_id());
+
+        // 기존의 선택된 것들 중 새 리스트에 없는 것은 삭제
+        existingInterests.stream()
+                .filter(interest -> !newUserCategoryIds.contains(interest.getUserCategoryId()))
+                .forEach(userInterestRepository::delete);
+
+        // 새로 선택된 것들 중 기존에 없던 것은 추가
+        newUserCategoryIds.stream()
+                .filter(id -> !existingCategoryIds.contains(id))
+                .map(id -> UserInterestList.builder()
+                        .userUuid(userInterestGetDto.getUserUuid())
+                        .userCategoryId(id)
+                        .build())
+                .forEach(userInterestRepository::save);
     }
 
     @Override

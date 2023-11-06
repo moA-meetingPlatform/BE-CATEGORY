@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Getter
 @MappedSuperclass // 해당 클래스가 JPA 엔티티의 베이스 클래스로 매핑되기 위한 어노테이션
 @EntityListeners(AuditingEntityListener.class) // AuditingEntityListener 클래스를 사용하기 위한 어노테이션
-public class BaseDateTime {
+public abstract class BaseDateTime {
 
 	@CreatedDate // 생성 날짜를 자동으로 설정하기 위한 어노테이션
 	@Column(name = "create_datetime", updatable = false)

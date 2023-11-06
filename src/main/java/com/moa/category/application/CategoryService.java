@@ -22,6 +22,4 @@ public interface CategoryService {
     void updateUserInterests(UserInterestGetDto UserInterestGetDto);
 
     List<Long> getMeetingListByCategory(int categoryId);
-
-    //Boolean isTopCategory(int categoryId);
 }
