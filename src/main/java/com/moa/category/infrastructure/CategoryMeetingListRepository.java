@@ -8,4 +8,8 @@ import java.util.List;
 public interface CategoryMeetingListRepository extends JpaRepository<CategoryMeetingList,Long>{
     List<CategoryMeetingList> findByTopCategoryIdAndEnableIsTrue(Integer topCategoryId);
     List<CategoryMeetingList> findBySubCategoryIdAndEnableIsTrue(Integer subCategoryId);
+
+    List<CategoryMeetingList> findAllByEnableIsTrue();
+    int countByTopCategoryIdAndEnableIsTrue(Integer topCategoryId);
+
 }
