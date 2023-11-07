@@ -16,6 +16,7 @@ public enum ErrorCode {
 	BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
 	FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다.");
 
+
 	private final HttpStatus status;
 	private final String description;
 
