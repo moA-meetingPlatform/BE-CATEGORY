@@ -38,19 +38,32 @@ public class CategoryServiceImpl implements CategoryService{
         List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryNotDeleted();
 
         Map<Integer, List<MeetingThemeCategory>> groupedData = themeCategories.stream()
-                .filter(tc -> tc.getTopCategory() != null && tc.getId() != null) // 상위 카테고리가 null이 아닌 것만 필터링
+                .filter(tc -> tc.getTopCategory() != null && tc.getId() != null)
                 .collect(Collectors.groupingBy(tc -> tc.getTopCategory().getId()));
 
-        return groupedData.values().stream()
-                .map(tcs -> {
-                    MeetingThemeCategory topCategory = tcs.get(0).getTopCategory();
-                    List<CategoriesListOut.SubCategory> subCategories = tcs.stream()
+        return groupedData.entrySet().stream()
+                .map(entry -> {
+                    Integer topCategoryId = entry.getKey();
+                    List<MeetingThemeCategory> subCategoryList = entry.getValue();
+
+                    MeetingThemeCategory topCategory = subCategoryList.get(0).getTopCategory();
+                    List<CategoriesListOut.SubCategory> subCategories = subCategoryList.stream()
                             .map(tc -> new CategoriesListOut.SubCategory(tc.getId(), tc.getCategoryName()))
                             .collect(Collectors.toList());
-                    return new CategoriesListOut(topCategory.getId(), topCategory.getCategoryName(), subCategories);
+
+                    // 해당 상위 카테고리에 포함되는 모임의 개수를 조회
+                    Integer meetingCount = categoryMeetingListRepository
+                            .countByTopCategoryIdAndEnableIsTrue(topCategoryId);
+
+                    return new CategoriesListOut(
+                            topCategory.getId(),
+                            topCategory.getCategoryName(),
+                            subCategories,
+                            meetingCount);
                 })
                 .collect(Collectors.toList());
     }
+
 
     // 유저가 선택한 카테고리를 DB에 저장하는 코드
     @Override
@@ -126,10 +139,10 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public void updateUserInterests(UserInterestGetDto userInterestGetDto) {
-        // UUID로 기존 선택된 카테고리 리스트를 가져옵니다.
+        // UUID로 기존 선택된 카테고리 리스트를 가져옴
         List<UserInterestList> existingInterests = userInterestRepository.findByUserUuid(userInterestGetDto.getUserUuid());
 
-        // 기존 리스트를 ID로 변환합니다.
+        // 기존 리스트를 ID로 변환
         Set<Integer> existingCategoryIds = existingInterests.stream()
                 .map(UserInterestList::getUserCategoryId)
                 .collect(Collectors.toSet());
@@ -152,14 +165,16 @@ public class CategoryServiceImpl implements CategoryService{
                 .forEach(userInterestRepository::save);
     }
 
+
+
     @Override
     public List<Long> getMeetingListByCategory(int categoryId) {
         List<CategoryMeetingList> categoryMeetingLists;
         MeetingThemeCategory category = themeCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
-        if (category.getTopCategory() == null) { // 상위 카테고리가 null이면, 입력된 카테고리는 상위 카테고리
+        if (category.getTopCategory() == null) {
             categoryMeetingLists = categoryMeetingListRepository.findByTopCategoryIdAndEnableIsTrue(categoryId);
-        } else { // 그렇지 않다면, 입력된 카테고리는 하위 카테고리
+        } else {
             categoryMeetingLists = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId);
         }
 
