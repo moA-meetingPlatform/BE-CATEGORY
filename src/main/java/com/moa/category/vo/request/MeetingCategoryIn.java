@@ -1,4 +1,4 @@
-package com.moa.category.vo;
+package com.moa.category.vo.request;
 
 import lombok.*;
 

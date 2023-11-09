@@ -1,10 +1,9 @@
 package com.moa.category.application;
 
-import com.moa.category.domain.CategoryMeetingList;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
-import com.moa.category.vo.CategoriesListOut;
-import com.moa.category.vo.CreateThemeCategoryIn;
+import com.moa.category.vo.response.CategoriesListOut;
+import com.moa.category.vo.request.CreateThemeCategoryIn;
 
 import java.util.List;
 

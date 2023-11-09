@@ -8,13 +8,15 @@ import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.infrastructure.ThemeCategoryRepository;
 import com.moa.category.infrastructure.UserInterestRepository;
-import com.moa.category.vo.CategoriesListOut;
-import com.moa.category.vo.CreateThemeCategoryIn;
+import com.moa.category.vo.response.CategoriesListOut;
+import com.moa.category.vo.request.CreateThemeCategoryIn;
+import com.moa.global.config.exception.CustomException;
+import com.moa.global.config.exception.ErrorCode;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +35,7 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보내는 코드
+    @Transactional(readOnly = true)
     @Override
     public List<CategoriesListOut> categoriesList() {
         List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryNotDeleted();
@@ -66,6 +69,7 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     // 유저가 선택한 카테고리를 DB에 저장하는 코드
+    @Transactional(readOnly = false)
     @Override
     public void createUserInterests(UserInterestGetDto userInterestGetDto) {
         if (userInterestGetDto.getUser_category_id().size() < 5 || userInterestGetDto.getUser_category_id().size() > 10) {
@@ -84,6 +88,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     // 관리자가 주제 카테고리 생성
+    @Transactional(readOnly = false)
     @Override
     public void createThemeCategory(CreateThemeCategoryIn createThemeCategoryIn) {
         MeetingThemeCategory topCategory = null;
@@ -118,6 +123,7 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     // 모임 생성시 모임의 카테고리를 DB에 저장하는 코드
+    @Transactional(readOnly = false)
     @Override
     public void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto) {
         CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder()
@@ -130,6 +136,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     // 모임 취소, 모임종료, 모임삭제시, enable을 0으로 바꾸는 코드
+    @Transactional(readOnly = false)
     @Override
     public void disableMeetingCategory(Long meetingId) {
         CategoryMeetingList categoryMeetingList = categoryMeetingListRepository.findById(meetingId)
@@ -137,6 +144,8 @@ public class CategoryServiceImpl implements CategoryService{
         categoryMeetingList.disable();
     }
 
+    // 유저 관심사 변경
+    @Transactional(readOnly = false)
     @Override
     public void updateUserInterests(UserInterestGetDto userInterestGetDto) {
         // UUID로 기존 선택된 카테고리 리스트를 가져옴
@@ -166,12 +175,13 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
 
-
+    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주는 코드
+    @Transactional(readOnly = true)
     @Override
     public List<Long> getMeetingListByCategory(int categoryId) {
         List<CategoryMeetingList> categoryMeetingLists;
         MeetingThemeCategory category = themeCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
+                .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
         if (category.getTopCategory() == null) {
             categoryMeetingLists = categoryMeetingListRepository.findByTopCategoryIdAndEnableIsTrue(categoryId);
         } else {
