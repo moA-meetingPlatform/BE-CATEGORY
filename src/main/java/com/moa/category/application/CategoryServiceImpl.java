@@ -38,26 +38,33 @@ public class CategoryServiceImpl implements CategoryService{
     @Transactional(readOnly = true)
     @Override
     public List<CategoriesListOut> categoriesList() {
+        // 삭제되지 않은 모든 'MeetingThemeCategory'를 데이터베이스에서 조회
         List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryNotDeleted();
 
+        // 조회된 'MeetingThemeCategory' 목록을 상위 카테고리 ID로 그룹화
+        // 이때 상위 카테고리와 ID가 null이 아닌 것들만 필터링
         Map<Integer, List<MeetingThemeCategory>> groupedData = themeCategories.stream()
                 .filter(tc -> tc.getTopCategory() != null && tc.getId() != null)
                 .collect(Collectors.groupingBy(tc -> tc.getTopCategory().getId()));
 
+        // 그룹화된 데이터를 바탕으로 'CategoriesListOut' 객체 리스트 생성
         return groupedData.entrySet().stream()
                 .map(entry -> {
                     Integer topCategoryId = entry.getKey();
                     List<MeetingThemeCategory> subCategoryList = entry.getValue();
 
+                    // 상위 카테고리 객체를 얻음
                     MeetingThemeCategory topCategory = subCategoryList.get(0).getTopCategory();
+                    // 하위 카테고리 목록을 생성
                     List<CategoriesListOut.SubCategory> subCategories = subCategoryList.stream()
                             .map(tc -> new CategoriesListOut.SubCategory(tc.getId(), tc.getCategoryName()))
                             .collect(Collectors.toList());
 
-                    // 해당 상위 카테고리에 포함되는 모임의 개수를 조회
+                    // 해당 상위 카테고리에 포함되는 활성화된 미팅의 개수 조회
                     Integer meetingCount = categoryMeetingListRepository
                             .countByTopCategoryIdAndEnableIsTrue(topCategoryId);
 
+                    // 최종적으로 상위 카테고리 ID, 이름, 하위 카테고리 목록, 미팅 수를 포함하는 'CategoriesListOut' 반환
                     return new CategoriesListOut(
                             topCategory.getId(),
                             topCategory.getCategoryName(),
@@ -66,6 +73,7 @@ public class CategoryServiceImpl implements CategoryService{
                 })
                 .collect(Collectors.toList());
     }
+
 
 
     // 유저가 선택한 카테고리를 DB에 저장하는 코드
@@ -130,6 +138,11 @@ public class CategoryServiceImpl implements CategoryService{
                 .topCategoryId(categoryMeetingGetDto.getTopCategoryId())
                 .subCategoryId(categoryMeetingGetDto.getSubCategoryId())
                 .meetingId(categoryMeetingGetDto.getCategoryMeetingId())
+                .maxAgeLimit(categoryMeetingGetDto.getMaxAgeLimit())
+                .minAgeLimit(categoryMeetingGetDto.getMinAgeLimit())
+                .canParticipateGender(categoryMeetingGetDto.getCanParticipateGender())
+                .canParticipateCompanyList(categoryMeetingGetDto.getCanParticipateCompanyList())
+                .enable(true)
                 .build();
 
         categoryMeetingListRepository.save(categoryMeetingList);

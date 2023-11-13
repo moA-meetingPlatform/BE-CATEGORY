@@ -70,18 +70,18 @@ public class CategoryController {
             @RequestParam(value = "categoryId", defaultValue = "0") int categoryId) {
         MeetingListOut meetingListOut;
         if (categoryId == 0) {
-            // 모든 미팅 목록을 반환합니다.
+            // 모든 미팅 목록을 반환
             List<CategoryMeetingList> allMeetingLists = categoryMeetingListRepository.findAllByEnableIsTrue();
             List<Long> allMeetingIds = allMeetingLists.stream()
                     .map(CategoryMeetingList::getMeetingId)
                     .collect(Collectors.toList());
             meetingListOut = new MeetingListOut(allMeetingIds, allMeetingIds.size());
         } else if (categoryId > 0) {
-            // 특정 카테고리의 미팅 목록을 반환합니다.
+            // 특정 카테고리의 미팅 목록을 반환
             List<Long> meetingList = categoryService.getMeetingListByCategory(categoryId);
             meetingListOut = new MeetingListOut(meetingList, meetingList.size());
         } else {
-            // 'categoryId'가 잘못된 값인 경우, 잘못된 요청으로 간주합니다.
+            // 'categoryId'가 잘못된 값인 경우, 잘못된 요청으로 간주
             return ResponseEntity.badRequest().body(ApiResult.ofError(ErrorCode.BAD_REQUEST));
         }
 
