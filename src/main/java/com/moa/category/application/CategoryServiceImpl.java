@@ -8,6 +8,7 @@ import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.infrastructure.ThemeCategoryRepository;
 import com.moa.category.infrastructure.UserInterestRepository;
+import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
 import com.moa.global.config.exception.CustomException;
@@ -18,17 +19,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceImpl implements CategoryService{
-    private final JPAQueryFactory query;
+    private final JPAQueryFactory jpaQueryFactory;
     private final ThemeCategoryRepository themeCategoryRepository;
     private final UserInterestRepository userInterestRepository;
     private final CategoryMeetingListRepository categoryMeetingListRepository;
@@ -138,13 +136,12 @@ public class CategoryServiceImpl implements CategoryService{
                 .topCategoryId(categoryMeetingGetDto.getTopCategoryId())
                 .subCategoryId(categoryMeetingGetDto.getSubCategoryId())
                 .meetingId(categoryMeetingGetDto.getCategoryMeetingId())
-                .maxAgeLimit(categoryMeetingGetDto.getMaxAgeLimit())
-                .minAgeLimit(categoryMeetingGetDto.getMinAgeLimit())
-                .canParticipateGender(categoryMeetingGetDto.getCanParticipateGender())
-                .canParticipateCompanyList(categoryMeetingGetDto.getCanParticipateCompanyList())
+                .maxAge(categoryMeetingGetDto.getMaxAge())
+                .minAge(categoryMeetingGetDto.getMinAge())
+                .participateGender(categoryMeetingGetDto.getParticipateGender())
+                .participateCompanies(categoryMeetingGetDto.getParticipateCompanies())
                 .enable(true)
                 .build();
-
         categoryMeetingListRepository.save(categoryMeetingList);
     }
 
@@ -188,23 +185,53 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
 
-    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주는 코드
-    @Transactional(readOnly = true)
+    // 유저가 선택한 카테고리 조회
     @Override
-    public List<Long> getMeetingListByCategory(int categoryId) {
-        List<CategoryMeetingList> categoryMeetingLists;
-        MeetingThemeCategory category = themeCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
-        if (category.getTopCategory() == null) {
-            categoryMeetingLists = categoryMeetingListRepository.findByTopCategoryIdAndEnableIsTrue(categoryId);
-        } else {
-            categoryMeetingLists = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId);
-        }
-
-        return categoryMeetingLists.stream()
-                .map(CategoryMeetingList::getMeetingId)
+    public List<Integer> getUserInterests(UUID uuid) {
+        List<UserInterestList> userInterests = userInterestRepository.findByUserUuid(uuid);
+        return userInterests.stream()
+                .map(UserInterestList::getUserCategoryId)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public CategoriesListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId) {
+        List<Long> filteredMeetingList;
+        List<CategoriesListOut.SubCategory> subCategories = new ArrayList<>();
+
+        // 카테고리 ID와 사용자 선호도에 따른 필터링 로직
+        if (categoryId > 0) {
+            filteredMeetingList = categoryMeetingListRepository.findMeetingsByCategoryAndPreferences(
+                    categoryId,
+                    userPreferences.getBirthYear(),
+                    userPreferences.getGender(),
+                    userPreferences.getCompany()
+            );
+
+            // 하위 카테고리 정보 조회
+            subCategories = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId)
+                    .stream()
+                    .map(categoryMeetingList -> {
+                        Integer subCategoryId = categoryMeetingList.getSubCategoryId();
+                        String categoryName = themeCategoryRepository.findById(subCategoryId)
+                                .map(MeetingThemeCategory::getCategoryName)
+                                .orElse("Unknown Category");
+                        return new CategoriesListOut.SubCategory(subCategoryId, categoryName);
+                    })
+                    .collect(Collectors.toList());
+        } else {
+            filteredMeetingList = categoryMeetingListRepository.findMeetingsByUserPreferences(
+                    userPreferences.getBirthYear(),
+                    userPreferences.getGender(),
+                    userPreferences.getCompany()
+            );
+        }
+
+        return CategoriesListOut.builder()
+                .meetingCount(filteredMeetingList.size())
+                .subCategories(subCategories)
+                .build();
+    }
 }
 

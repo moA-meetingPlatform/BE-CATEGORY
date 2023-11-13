@@ -19,4 +19,13 @@ public enum CompanyCategory {
 
     private final Integer code;
     private final String title;
+
+    public static CompanyCategory fromCode(Integer code) {
+        for (CompanyCategory category : CompanyCategory.values()) {
+            if (category.getCode().equals(code)) {
+                return category;
+            }
+        }
+        throw new IllegalArgumentException("Invalid CompanyCategory code: " + code);
+    }
 }

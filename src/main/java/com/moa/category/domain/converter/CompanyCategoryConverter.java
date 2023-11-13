@@ -4,35 +4,41 @@ import com.moa.category.domain.enums.CompanyCategory;
 import jakarta.persistence.AttributeConverter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class CompanyCategoryConverter implements AttributeConverter<List<CompanyCategory>, Integer> {
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
+
+@Converter
+public class CompanyCategoryConverter implements AttributeConverter<EnumSet<CompanyCategory>, String> {
 
     @Override
-    public Integer convertToDatabaseColumn(List<CompanyCategory> attribute) {
+    public String convertToDatabaseColumn(EnumSet<CompanyCategory> attribute) {
         if (attribute == null || attribute.isEmpty()) {
             return null;
         }
 
-        int result = 0;
-        for (CompanyCategory category : attribute) {
-            result |= category.getCode();
-        }
-        return result;
+        // EnumSet을 문자열로 변환
+        return attribute.stream()
+                .map(CompanyCategory::getCode)
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
     @Override
-    public List<CompanyCategory> convertToEntityAttribute(Integer dbData) {
-        if (dbData == null) {
-            return null;
+    public EnumSet<CompanyCategory> convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isEmpty()) {
+            return EnumSet.noneOf(CompanyCategory.class);
         }
 
-        List<CompanyCategory> categories = new ArrayList<>();
-        for (CompanyCategory category : CompanyCategory.values()) {
-            if ((dbData & category.getCode()) != 0) {
-                categories.add(category);
-            }
-        }
-        return categories;
+        // 문자열을 EnumSet으로 변환
+        return Arrays.stream(dbData.split(","))
+                .map(Integer::parseInt)
+                .map(code -> CompanyCategory.fromCode(code))
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(CompanyCategory.class)));
     }
 }
+

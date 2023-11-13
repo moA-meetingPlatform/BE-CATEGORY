@@ -1,13 +1,10 @@
 package com.moa.category.presentation;
 import com.moa.category.application.CategoryService;
-import com.moa.category.domain.CategoryMeetingList;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.vo.request.*;
 import com.moa.category.vo.response.CategoriesListOut;
-import com.moa.category.vo.response.MeetingListOut;
-import com.moa.global.config.exception.ErrorCode;
 import com.moa.global.vo.ApiResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -64,27 +61,35 @@ public class CategoryController {
         categoryService.disableMeetingCategory(disableMeetingCategoryIn.getMeetingId());
         return ResponseEntity.ok(ApiResult.ofSuccess(null));
     }
-    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주기
+    // 유저가 선택한 카테고리 조회
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserInterests(@RequestParam(value = "userUuid") UUID uuid) {
+        List<Integer> userInterests = categoryService.getUserInterests(uuid);
+        return ResponseEntity.ok(ApiResult.ofSuccess(userInterests));
+    }
+
+    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주기\
+    // 로그인 X
     @GetMapping("/meeting")
     public ResponseEntity<?> getMeetingListByCategory(
-            @RequestParam(value = "categoryId", defaultValue = "0") int categoryId) {
-        MeetingListOut meetingListOut;
-        if (categoryId == 0) {
-            // 모든 미팅 목록을 반환
-            List<CategoryMeetingList> allMeetingLists = categoryMeetingListRepository.findAllByEnableIsTrue();
-            List<Long> allMeetingIds = allMeetingLists.stream()
-                    .map(CategoryMeetingList::getMeetingId)
-                    .collect(Collectors.toList());
-            meetingListOut = new MeetingListOut(allMeetingIds, allMeetingIds.size());
-        } else if (categoryId > 0) {
-            // 특정 카테고리의 미팅 목록을 반환
-            List<Long> meetingList = categoryService.getMeetingListByCategory(categoryId);
-            meetingListOut = new MeetingListOut(meetingList, meetingList.size());
-        } else {
-            // 'categoryId'가 잘못된 값인 경우, 잘못된 요청으로 간주
-            return ResponseEntity.badRequest().body(ApiResult.ofError(ErrorCode.BAD_REQUEST));
-        }
+            @RequestParam(value = "categoryId", defaultValue = "0") int categoryId,
+            @RequestParam(value = "userUuid", required = false) UUID userUuid,
+            @RequestParam(value = "birthYear", required = false) String birthYear,
+            @RequestParam(value = "gender", required = false) Character gender,
+            @RequestParam(value = "company", required = false) String company) {
+
+        // UserCategoriesIn 객체를 사용하여 사용자 선호도 정보를 설정
+        UserCategoriesIn userPreferences = UserCategoriesIn.builder()
+                .userUUID(userUuid)
+                .birthYear(birthYear)
+                .gender(gender)
+                .company(company)
+                .build();
+
+        // 서비스 메소드를 호출하여 필터링된 모임 목록을 가져옴
+        CategoriesListOut meetingListOut = categoryService.getMeetingListByCategory(userPreferences, categoryId);
 
         return ResponseEntity.ok(ApiResult.ofSuccess(meetingListOut));
     }
+
 }
