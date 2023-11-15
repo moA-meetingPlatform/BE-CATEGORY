@@ -1,8 +1,8 @@
 package com.moa.category.application;
 
-import com.moa.category.domain.CategoryMeetingList;
-import com.moa.category.domain.MeetingThemeCategory;
-import com.moa.category.domain.UserInterestList;
+import com.moa.category.domain.*;
+import com.moa.category.domain.enums.CanParticipateGender;
+import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
@@ -11,15 +11,19 @@ import com.moa.category.infrastructure.UserInterestRepository;
 import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
+import com.moa.category.vo.response.MeetingListOut;
 import com.moa.global.config.exception.CustomException;
 import com.moa.global.config.exception.ErrorCode;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import jakarta.persistence.criteria.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -196,42 +200,54 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Transactional(readOnly = true)
     @Override
-    public CategoriesListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId) {
-        List<Long> filteredMeetingList;
-        List<CategoriesListOut.SubCategory> subCategories = new ArrayList<>();
+    public MeetingListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId) {
+        Specification<CategoryMeetingList> spec = createSpecification(userPreferences, categoryId);
+        List<CategoryMeetingList> meetingLists = categoryMeetingListRepository.findAll(spec);
+        List<Long> meetingIds = meetingLists.stream()
+                .map(CategoryMeetingList::getMeetingId)
+                .collect(Collectors.toList());
 
-        // 카테고리 ID와 사용자 선호도에 따른 필터링 로직
-        if (categoryId > 0) {
-            filteredMeetingList = categoryMeetingListRepository.findMeetingsByCategoryAndPreferences(
-                    categoryId,
-                    userPreferences.getBirthYear(),
-                    userPreferences.getGender(),
-                    userPreferences.getCompany()
-            );
-
-            // 하위 카테고리 정보 조회
-            subCategories = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId)
-                    .stream()
-                    .map(categoryMeetingList -> {
-                        Integer subCategoryId = categoryMeetingList.getSubCategoryId();
-                        String categoryName = themeCategoryRepository.findById(subCategoryId)
-                                .map(MeetingThemeCategory::getCategoryName)
-                                .orElse("Unknown Category");
-                        return new CategoriesListOut.SubCategory(subCategoryId, categoryName);
-                    })
-                    .collect(Collectors.toList());
-        } else {
-            filteredMeetingList = categoryMeetingListRepository.findMeetingsByUserPreferences(
-                    userPreferences.getBirthYear(),
-                    userPreferences.getGender(),
-                    userPreferences.getCompany()
-            );
-        }
-
-        return CategoriesListOut.builder()
-                .meetingCount(filteredMeetingList.size())
-                .subCategories(subCategories)
+        return MeetingListOut.builder()
+                .meetingIdList(meetingIds)
+                .count(meetingIds.size())
                 .build();
     }
+
+    private Specification<CategoryMeetingList> createSpecification(UserCategoriesIn userPreferences, int categoryId) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 나이 필터
+            if (userPreferences.getAge() != null) {
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("minAge"), userPreferences.getAge()),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("maxAge"), userPreferences.getAge())
+                ));
+            }
+
+            // 성별 필터
+            if (userPreferences.getParticipateGender() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("participateGender"), userPreferences.getParticipateGender()));
+            }
+
+            // 회사 카테고리 필터
+            if (userPreferences.getParticipateCompanies() != null && !userPreferences.getParticipateCompanies().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("participateCompanies"), "%" + userPreferences.getParticipateCompanies() + "%"));
+            }
+
+            // enable 필드가 true인 데이터만 필터링
+            predicates.add(criteriaBuilder.isTrue(root.get("enable")));
+
+            // 카테고리 ID 필터
+            if (categoryId > 0) {
+                predicates.add(criteriaBuilder.equal(root.get("topCategoryId"), categoryId));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
 }
+
+
 

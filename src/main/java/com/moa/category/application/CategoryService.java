@@ -5,6 +5,7 @@ import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
+import com.moa.category.vo.response.MeetingListOut;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -25,5 +26,5 @@ public interface CategoryService {
 
     List<Integer> getUserInterests(UUID uuid);
 
-    CategoriesListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId);
+    MeetingListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId);
 }

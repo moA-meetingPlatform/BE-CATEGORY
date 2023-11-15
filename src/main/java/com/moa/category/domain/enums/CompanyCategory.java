@@ -1,12 +1,13 @@
 package com.moa.category.domain.enums;
 
+import com.moa.global.BaseEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 
 @Getter
 @AllArgsConstructor
-public enum CompanyCategory {
+public enum CompanyCategory  implements BaseEnum<Integer, String> {
     MAJOR_COMPANY(1, "대기업"),
     MAJOR_COMPANY_SUBSIDIARY(2, "대기업 자회사"),
     MEDIUM_COMPANY(3, "중견기업"),

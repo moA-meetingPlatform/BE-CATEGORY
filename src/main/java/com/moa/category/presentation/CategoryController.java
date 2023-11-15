@@ -1,10 +1,13 @@
 package com.moa.category.presentation;
 import com.moa.category.application.CategoryService;
+import com.moa.category.domain.enums.CanParticipateGender;
+import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.vo.request.*;
 import com.moa.category.vo.response.CategoriesListOut;
+import com.moa.category.vo.response.MeetingListOut;
 import com.moa.global.vo.ApiResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,8 +15,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -74,22 +77,62 @@ public class CategoryController {
     public ResponseEntity<?> getMeetingListByCategory(
             @RequestParam(value = "categoryId", defaultValue = "0") int categoryId,
             @RequestParam(value = "userUuid", required = false) UUID userUuid,
-            @RequestParam(value = "birthYear", required = false) String birthYear,
-            @RequestParam(value = "gender", required = false) Character gender,
-            @RequestParam(value = "company", required = false) String company) {
+            @RequestParam(value = "age", required = false) Integer age,
+            @RequestParam(value = "gender", required = false) String genderString,
+            @RequestParam(value = "companies", required = false) String companiesString) {
 
-        // UserCategoriesIn 객체를 사용하여 사용자 선호도 정보를 설정
+        // 유저 선호도 설정
         UserCategoriesIn userPreferences = UserCategoriesIn.builder()
                 .userUUID(userUuid)
-                .birthYear(birthYear)
-                .gender(gender)
-                .company(company)
+                .age(age)
+                .participateGender(convertStringToGender(genderString))
+                .participateCompanies(processSingleCompanyCategoryInput(companiesString))
                 .build();
 
-        // 서비스 메소드를 호출하여 필터링된 모임 목록을 가져옴
-        CategoriesListOut meetingListOut = categoryService.getMeetingListByCategory(userPreferences, categoryId);
+        // 서비스 메소드 호출
+        MeetingListOut meetingListOut = categoryService.getMeetingListByCategory(userPreferences, categoryId);
 
-        return ResponseEntity.ok(ApiResult.ofSuccess(meetingListOut));
+        return ResponseEntity.ok(meetingListOut);
+    }
+
+    private CanParticipateGender convertStringToGender(String genderString) {
+        if (genderString == null || genderString.isEmpty()) {
+            return null;
+        }
+        return CanParticipateGender.valueOf(genderString.toUpperCase());
+    }
+
+    /**
+     * 사용자가 선택한 단일 회사 카테고리를 처리하여 문자열로 반환하는 함수
+     *
+     * @param companyCategoryInput 사용자 입력 문자열
+     * @return 처리된 회사 카테고리 문자열
+     */
+    private String processSingleCompanyCategoryInput(String companyCategoryInput) {
+        if (companyCategoryInput == null || companyCategoryInput.isEmpty()) {
+            return "";
+        }
+        // 입력된 문자열로부터 CompanyCategory 열거형 값 추출
+        CompanyCategory selectedCategory = CompanyCategory.valueOf(companyCategoryInput);
+
+        // 추출된 값을 Set으로 변환
+        Set<CompanyCategory> categories = Collections.singleton(selectedCategory);
+
+        // Set을 문자열로 변환
+        return convertCompanyCategoriesToString(categories);
+    }
+
+    /**
+     * CompanyCategory의 Set을 콤마로 구분된 문자열로 변환
+     *
+     * @param categories CompanyCategory의 Set
+     * @return 콤마로 구분된 문자열
+     */
+    private String convertCompanyCategoriesToString(Set<CompanyCategory> categories) {
+        return categories.stream()
+                .map(CompanyCategory::getCode)
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
 }

@@ -1,14 +1,10 @@
 package com.moa.category.domain;
 
 import com.moa.category.domain.converter.CanParticipateGenderConverter;
-import com.moa.category.domain.converter.CompanyCategoryConverter;
 import com.moa.category.domain.enums.CanParticipateGender;
-import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.global.domain.BaseDateTime;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.List;
 
 @Entity
 @Getter
@@ -35,9 +31,9 @@ public class CategoryMeetingList extends BaseDateTime {
     @Column(name = "participate_gender", length = 1)
     private CanParticipateGender participateGender;  //참여가능한 성별
 
-    @Convert(converter = CompanyCategoryConverter.class)
-    @Column(name = "participate_companies", length = 10)
-    private List<CompanyCategory> participateCompanies;  //참여가능한 기업 리스트
+    @Column(name = "participate_companies",  columnDefinition = "VARCHAR(30)")
+    private String participateCompanies;  //참여가능한 기업 리스트
+
 
 
     public void disable() {
