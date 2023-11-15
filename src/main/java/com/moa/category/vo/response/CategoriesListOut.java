@@ -1,5 +1,6 @@
-package com.moa.category.vo;
+package com.moa.category.vo.response;
 
+import com.moa.category.domain.enums.CompanyCategory;
 import lombok.*;
 
 import java.util.List;

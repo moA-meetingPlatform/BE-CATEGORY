@@ -1,5 +1,6 @@
 package com.moa.category.domain;
 
+import com.moa.global.domain.BaseDateTime;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInterestList {
+public class UserInterestList extends BaseDateTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;    //카테고리 모임 리스트

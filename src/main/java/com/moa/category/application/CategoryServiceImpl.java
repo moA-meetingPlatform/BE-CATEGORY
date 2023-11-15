@@ -1,60 +1,72 @@
 package com.moa.category.application;
 
-import com.moa.category.domain.CategoryMeetingList;
-import com.moa.category.domain.MeetingThemeCategory;
-import com.moa.category.domain.UserInterestList;
+import com.moa.category.domain.*;
+import com.moa.category.domain.enums.CanParticipateGender;
+import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.infrastructure.ThemeCategoryRepository;
 import com.moa.category.infrastructure.UserInterestRepository;
-import com.moa.category.vo.CategoriesListOut;
-import com.moa.category.vo.CreateThemeCategoryIn;
+import com.moa.category.vo.request.UserCategoriesIn;
+import com.moa.category.vo.response.CategoriesListOut;
+import com.moa.category.vo.request.CreateThemeCategoryIn;
+import com.moa.category.vo.response.MeetingListOut;
+import com.moa.global.config.exception.CustomException;
+import com.moa.global.config.exception.ErrorCode;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import jakarta.persistence.criteria.Predicate;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceImpl implements CategoryService{
-    private final JPAQueryFactory query;
+    private final JPAQueryFactory jpaQueryFactory;
     private final ThemeCategoryRepository themeCategoryRepository;
     private final UserInterestRepository userInterestRepository;
     private final CategoryMeetingListRepository categoryMeetingListRepository;
 
 
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보내는 코드
+    @Transactional(readOnly = true)
     @Override
     public List<CategoriesListOut> categoriesList() {
+        // 삭제되지 않은 모든 'MeetingThemeCategory'를 데이터베이스에서 조회
         List<MeetingThemeCategory> themeCategories = themeCategoryRepository.findAllByCategoryNotDeleted();
 
+        // 조회된 'MeetingThemeCategory' 목록을 상위 카테고리 ID로 그룹화
+        // 이때 상위 카테고리와 ID가 null이 아닌 것들만 필터링
         Map<Integer, List<MeetingThemeCategory>> groupedData = themeCategories.stream()
                 .filter(tc -> tc.getTopCategory() != null && tc.getId() != null)
                 .collect(Collectors.groupingBy(tc -> tc.getTopCategory().getId()));
 
+        // 그룹화된 데이터를 바탕으로 'CategoriesListOut' 객체 리스트 생성
         return groupedData.entrySet().stream()
                 .map(entry -> {
                     Integer topCategoryId = entry.getKey();
                     List<MeetingThemeCategory> subCategoryList = entry.getValue();
 
+                    // 상위 카테고리 객체를 얻음
                     MeetingThemeCategory topCategory = subCategoryList.get(0).getTopCategory();
+                    // 하위 카테고리 목록을 생성
                     List<CategoriesListOut.SubCategory> subCategories = subCategoryList.stream()
                             .map(tc -> new CategoriesListOut.SubCategory(tc.getId(), tc.getCategoryName()))
                             .collect(Collectors.toList());
 
-                    // 해당 상위 카테고리에 포함되는 모임의 개수를 조회
+                    // 해당 상위 카테고리에 포함되는 활성화된 미팅의 개수 조회
                     Integer meetingCount = categoryMeetingListRepository
                             .countByTopCategoryIdAndEnableIsTrue(topCategoryId);
 
+                    // 최종적으로 상위 카테고리 ID, 이름, 하위 카테고리 목록, 미팅 수를 포함하는 'CategoriesListOut' 반환
                     return new CategoriesListOut(
                             topCategory.getId(),
                             topCategory.getCategoryName(),
@@ -65,7 +77,9 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
 
+
     // 유저가 선택한 카테고리를 DB에 저장하는 코드
+    @Transactional(readOnly = false)
     @Override
     public void createUserInterests(UserInterestGetDto userInterestGetDto) {
         if (userInterestGetDto.getUser_category_id().size() < 5 || userInterestGetDto.getUser_category_id().size() > 10) {
@@ -84,6 +98,7 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     // 관리자가 주제 카테고리 생성
+    @Transactional(readOnly = false)
     @Override
     public void createThemeCategory(CreateThemeCategoryIn createThemeCategoryIn) {
         MeetingThemeCategory topCategory = null;
@@ -118,18 +133,24 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     // 모임 생성시 모임의 카테고리를 DB에 저장하는 코드
+    @Transactional(readOnly = false)
     @Override
     public void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto) {
         CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder()
                 .topCategoryId(categoryMeetingGetDto.getTopCategoryId())
                 .subCategoryId(categoryMeetingGetDto.getSubCategoryId())
                 .meetingId(categoryMeetingGetDto.getCategoryMeetingId())
+                .maxAge(categoryMeetingGetDto.getMaxAge())
+                .minAge(categoryMeetingGetDto.getMinAge())
+                .participateGender(categoryMeetingGetDto.getParticipateGender())
+                .participateCompanies(categoryMeetingGetDto.getParticipateCompanies())
+                .enable(true)
                 .build();
-
         categoryMeetingListRepository.save(categoryMeetingList);
     }
 
     // 모임 취소, 모임종료, 모임삭제시, enable을 0으로 바꾸는 코드
+    @Transactional(readOnly = false)
     @Override
     public void disableMeetingCategory(Long meetingId) {
         CategoryMeetingList categoryMeetingList = categoryMeetingListRepository.findById(meetingId)
@@ -137,6 +158,8 @@ public class CategoryServiceImpl implements CategoryService{
         categoryMeetingList.disable();
     }
 
+    // 유저 관심사 변경
+    @Transactional(readOnly = false)
     @Override
     public void updateUserInterests(UserInterestGetDto userInterestGetDto) {
         // UUID로 기존 선택된 카테고리 리스트를 가져옴
@@ -166,22 +189,65 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
 
-
+    // 유저가 선택한 카테고리 조회
     @Override
-    public List<Long> getMeetingListByCategory(int categoryId) {
-        List<CategoryMeetingList> categoryMeetingLists;
-        MeetingThemeCategory category = themeCategoryRepository.findById(categoryId)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + categoryId));
-        if (category.getTopCategory() == null) {
-            categoryMeetingLists = categoryMeetingListRepository.findByTopCategoryIdAndEnableIsTrue(categoryId);
-        } else {
-            categoryMeetingLists = categoryMeetingListRepository.findBySubCategoryIdAndEnableIsTrue(categoryId);
-        }
-
-        return categoryMeetingLists.stream()
-                .map(CategoryMeetingList::getMeetingId)
+    public List<Integer> getUserInterests(UUID uuid) {
+        List<UserInterestList> userInterests = userInterestRepository.findByUserUuid(uuid);
+        return userInterests.stream()
+                .map(UserInterestList::getUserCategoryId)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public MeetingListOut getMeetingListByCategory(UserCategoriesIn userPreferences, int categoryId) {
+        Specification<CategoryMeetingList> spec = createSpecification(userPreferences, categoryId);
+        List<CategoryMeetingList> meetingLists = categoryMeetingListRepository.findAll(spec);
+        List<Long> meetingIds = meetingLists.stream()
+                .map(CategoryMeetingList::getMeetingId)
+                .collect(Collectors.toList());
+
+        return MeetingListOut.builder()
+                .meetingIdList(meetingIds)
+                .count(meetingIds.size())
+                .build();
+    }
+
+    private Specification<CategoryMeetingList> createSpecification(UserCategoriesIn userPreferences, int categoryId) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // 나이 필터
+            if (userPreferences.getAge() != null) {
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("minAge"), userPreferences.getAge()),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("maxAge"), userPreferences.getAge())
+                ));
+            }
+
+            // 성별 필터
+            if (userPreferences.getParticipateGender() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("participateGender"), userPreferences.getParticipateGender()));
+            }
+
+            // 회사 카테고리 필터
+            if (userPreferences.getParticipateCompanies() != null && !userPreferences.getParticipateCompanies().isEmpty()) {
+                predicates.add(criteriaBuilder.like(root.get("participateCompanies"), "%" + userPreferences.getParticipateCompanies() + "%"));
+            }
+
+            // enable 필드가 true인 데이터만 필터링
+            predicates.add(criteriaBuilder.isTrue(root.get("enable")));
+
+            // 카테고리 ID 필터
+            if (categoryId > 0) {
+                predicates.add(criteriaBuilder.equal(root.get("topCategoryId"), categoryId));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
 }
+
+
 
