@@ -27,6 +27,7 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final ModelMapper modelMapper;
     private final CategoryMeetingListRepository categoryMeetingListRepository;
+
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보냄
     @GetMapping("")
     public ResponseEntity<?>getCategoriesList(){
@@ -71,7 +72,7 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResult.ofSuccess(userInterests));
     }
 
-    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주기\
+    // 카테고리 선택시 그에 맞는 모임 리스트로 보여주기
     // 로그인 X
     @GetMapping("/meeting")
     public ResponseEntity<?> getMeetingListByCategory(

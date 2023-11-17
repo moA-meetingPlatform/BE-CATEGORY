@@ -1,8 +1,6 @@
 package com.moa.category.application;
 
 import com.moa.category.domain.*;
-import com.moa.category.domain.enums.CanParticipateGender;
-import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
@@ -12,9 +10,6 @@ import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
 import com.moa.category.vo.response.MeetingListOut;
-import com.moa.global.config.exception.CustomException;
-import com.moa.global.config.exception.ErrorCode;
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -190,6 +185,7 @@ public class CategoryServiceImpl implements CategoryService{
 
 
     // 유저가 선택한 카테고리 조회
+    @Transactional(readOnly = true)
     @Override
     public List<Integer> getUserInterests(UUID uuid) {
         List<UserInterestList> userInterests = userInterestRepository.findByUserUuid(uuid);
