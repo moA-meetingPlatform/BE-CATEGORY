@@ -26,6 +26,15 @@ spring:
         password: ${SLAVE_DB_PASSWORD}
         driver-class-name: com.mysql.cj.jdbc.Driver
 
+  # Kafka 설정 추가
+  kafka:
+    bootstrap-servers: 10.176.12.164:9092 # Kafka 서비스의 CLUSTER-IP와 포트 -> 나중에 적용
+    #    bootstrap-servers: 34.64.189.14:9092 # Kafka 서비스의 EXTERNAL-IP와 포트
+    consumer:
+      group-id: my-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
 logging.level: # 서버 디버깅용 임시 설정
   org.hibernate.orm.jdbc.bind: trace
   com.moa.user: DEBUG
