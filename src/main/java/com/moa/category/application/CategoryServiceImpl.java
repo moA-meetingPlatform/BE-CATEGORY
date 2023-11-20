@@ -170,9 +170,18 @@ public class CategoryServiceImpl implements CategoryService{
         MeetingThemeCategory topCategory = meetingThemeCategory.getTopCategory(); //상위 카테고리
         Integer topCategoryId = topCategory == null ? null : topCategory.getId(); //상위 카테고리 id
 
-        String participateCompaniesCode = String.valueOf(dto.getParticipateCompanies());  //회사 카테고리를 코드로 변환
 
+        // 참여가능한 기업 리스트를 코드로 바꾸는 코드
+        String participateCompaniesCode = null;
+        if(dto.getParticipateCompanies() != null) {
+            participateCompaniesCode = Arrays.stream(dto.getParticipateCompanies().split(", "))
+                .map(CompanyCategory::valueOf)
+                .map(CompanyCategory::getCode)
+                .map(Object::toString)
+                .collect(Collectors.joining(", "));
+        }
         log.debug("participateCompaniesCode : {}", participateCompaniesCode);
+
 
         CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder() //카테고리 모임 리스트 생성
                 .topCategoryId(topCategoryId)    //상위카테고리 id
