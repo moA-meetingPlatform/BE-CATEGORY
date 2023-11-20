@@ -37,4 +37,4 @@ spring:
 
 logging.level: # 서버 디버깅용 임시 설정
   org.hibernate.orm.jdbc.bind: trace
-  com.moa.user: DEBUG
+  com.moa: DEBUG
