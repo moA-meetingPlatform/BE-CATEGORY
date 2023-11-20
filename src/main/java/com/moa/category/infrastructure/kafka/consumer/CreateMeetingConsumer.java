@@ -35,15 +35,16 @@ public class CreateMeetingConsumer {
 			log.error("JsonProcessingException : {}", e.getMessage() + "\n" + message);
 			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
+		log.debug("여까진 됨");
 
 		CategoryMeetingCreateDto dto = CategoryMeetingCreateDto.builder()
-			.categoryMeetingId((Long) map.get("categoryMeetingId"))
-			.topCategoryId((Integer) map.get("topCategoryId"))
-			.subCategoryId((Integer) map.get("subCategoryId"))
-			.maxAge((Integer) map.get("maxAge"))
-			.minAge((Integer) map.get("minAge"))
-			.participateGender((CanParticipateGender) map.get("participateGender"))
-			.participateCompanies((String) map.get("participateCompanies"))
+			.categoryMeetingId(Long.parseLong(String.valueOf(map.get("categoryMeetingId"))))
+			.topCategoryId(Integer.parseInt( String.valueOf(map.get("topCategoryId"))))
+			.subCategoryId(Integer.parseInt( String.valueOf(map.get("subCategoryId"))))
+			.maxAge(Integer.parseInt( String.valueOf(map.get("maxAge"))))
+			.minAge(Integer.parseInt( String.valueOf(map.get("minAge"))))
+			.participateGender(CanParticipateGender.valueOf(String.valueOf(map.get("participateGender"))))
+			.participateCompanies(String.valueOf(map.get("participateCompanies")))
 			.build();
 
 		log.debug("dto : {}", dto.toString());
