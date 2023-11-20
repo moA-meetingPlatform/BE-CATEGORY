@@ -38,16 +38,32 @@ public class CreateMeetingConsumer {
 		log.debug("여까진 됨");
 
 		CategoryMeetingCreateDto dto = CategoryMeetingCreateDto.builder()
-			.categoryMeetingId(Long.parseLong(String.valueOf(map.get("categoryMeetingId"))))
-			.topCategoryId(Integer.parseInt( String.valueOf(map.get("topCategoryId"))))
-			.subCategoryId(Integer.parseInt( String.valueOf(map.get("subCategoryId"))))
-			.maxAge(Integer.parseInt( String.valueOf(map.get("maxAge"))))
-			.minAge(Integer.parseInt( String.valueOf(map.get("minAge"))))
+			.categoryMeetingId(getLong(map.get("categoryMeetingId")))
+			.topCategoryId(getInteger(map.get("topCategoryId")))
+			.subCategoryId(getInteger(map.get("subCategoryId")))
+			.maxAge(getInteger(map.get("maxAge")))
+			.minAge(getInteger(map.get("minAge")))
 			.participateGender(CanParticipateGender.valueOf(String.valueOf(map.get("participateGender"))))
 			.participateCompanies(String.valueOf(map.get("participateCompanies")))
 			.build();
 
 		log.debug("dto : {}", dto.toString());
 
+	}
+
+	private Long getLong(Object o) {
+		String str = String.valueOf(o);
+		if("null".equals(str)) {
+			return null;
+		}
+		return Long.parseLong(str);
+	}
+
+	private Integer getInteger(Object o) {
+		String str = String.valueOf(o);
+		if("null".equals(str)) {
+			return null;
+		}
+		return Integer.parseInt(str);
 	}
 }
