@@ -2,6 +2,7 @@ package com.moa.category.application;
 
 import com.moa.category.domain.*;
 import com.moa.category.domain.enums.CompanyCategory;
+import com.moa.category.dto.CategoryMeetingCreateDto;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.MeetingDetailGetDto;
 import com.moa.category.dto.UserInterestGetDto;
@@ -12,6 +13,8 @@ import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
 import com.moa.category.vo.response.MeetingListOut;
+import com.moa.global.config.exception.CustomException;
+import com.moa.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -159,16 +162,25 @@ public class CategoryServiceImpl implements CategoryService{
     // 모임 생성시 모임의 카테고리를 DB에 저장하는 코드
     @Transactional(readOnly = false)
     @Override
-    public void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto) {
-        String participateCompaniesCode = String.valueOf(categoryMeetingGetDto.getParticipateCompanies());  //회사 카테고리를 코드로 변환
+    public void createMeetingCategory(CategoryMeetingCreateDto dto) {
+        log.debug("dto : {}", dto.toString());
+
+        MeetingThemeCategory meetingThemeCategory = themeCategoryRepository.findById(dto.getSubCategoryId())
+                .orElseThrow(() -> new CustomException(ErrorCode.BAD_REQUEST));
+        MeetingThemeCategory topCategory = meetingThemeCategory.getTopCategory(); //상위 카테고리
+        Integer topCategoryId = topCategory == null ? null : topCategory.getId(); //상위 카테고리 id
+
+        String participateCompaniesCode = String.valueOf(dto.getParticipateCompanies());  //회사 카테고리를 코드로 변환
+
+        log.debug("participateCompaniesCode : {}", participateCompaniesCode);
 
         CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder() //카테고리 모임 리스트 생성
-                .topCategoryId(categoryMeetingGetDto.getTopCategoryId())    //상위카테고리 id
-                .subCategoryId(categoryMeetingGetDto.getSubCategoryId())    //하위카테고리 id
-                .meetingId(categoryMeetingGetDto.getMeetingId())    //모임 id
-                .maxAge(categoryMeetingGetDto.getMaxAge())  //나이 상한선
-                .minAge(categoryMeetingGetDto.getMinAge())  //나이 하한선
-                .participateGender(categoryMeetingGetDto.getParticipateGender())    //참여가능한 성별
+                .topCategoryId(topCategoryId)    //상위카테고리 id
+                .subCategoryId(dto.getSubCategoryId())    //하위카테고리 id
+                .meetingId(dto.getCategoryMeetingId())    //모임 id
+                .maxAge(dto.getMaxAge())  //나이 상한선
+                .minAge(dto.getMinAge())  //나이 하한선
+                .participateGender(dto.getParticipateGender())    //참여가능한 성별
                 .participateCompanies(participateCompaniesCode) //참여가능한 기업 리스트
                 .enable(true)   //모임 종료, 모임 취소, 모임 삭제시 : 0으로 바꾸기
                 .build();
