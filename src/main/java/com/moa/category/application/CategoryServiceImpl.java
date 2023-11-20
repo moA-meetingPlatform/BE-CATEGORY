@@ -1,6 +1,7 @@
 package com.moa.category.application;
 
 import com.moa.category.domain.*;
+import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.MeetingDetailGetDto;
 import com.moa.category.dto.UserInterestGetDto;
@@ -11,7 +12,6 @@ import com.moa.category.vo.request.UserCategoriesIn;
 import com.moa.category.vo.response.CategoriesListOut;
 import com.moa.category.vo.request.CreateThemeCategoryIn;
 import com.moa.category.vo.response.MeetingListOut;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -160,26 +160,31 @@ public class CategoryServiceImpl implements CategoryService{
     @Transactional(readOnly = false)
     @Override
     public void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto) {
-        CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder()
-                .topCategoryId(categoryMeetingGetDto.getTopCategoryId())
-                .subCategoryId(categoryMeetingGetDto.getSubCategoryId())
-                .meetingId(categoryMeetingGetDto.getCategoryMeetingId())
-                .maxAge(categoryMeetingGetDto.getMaxAge())
-                .minAge(categoryMeetingGetDto.getMinAge())
-                .participateGender(categoryMeetingGetDto.getParticipateGender())
-                .participateCompanies(categoryMeetingGetDto.getParticipateCompanies())
-                .enable(true)
+        String participateCompaniesCode = String.valueOf(categoryMeetingGetDto.getParticipateCompanies());  //회사 카테고리를 코드로 변환
+
+        CategoryMeetingList categoryMeetingList = CategoryMeetingList.builder() //카테고리 모임 리스트 생성
+                .topCategoryId(categoryMeetingGetDto.getTopCategoryId())    //상위카테고리 id
+                .subCategoryId(categoryMeetingGetDto.getSubCategoryId())    //하위카테고리 id
+                .meetingId(categoryMeetingGetDto.getMeetingId())    //모임 id
+                .maxAge(categoryMeetingGetDto.getMaxAge())  //나이 상한선
+                .minAge(categoryMeetingGetDto.getMinAge())  //나이 하한선
+                .participateGender(categoryMeetingGetDto.getParticipateGender())    //참여가능한 성별
+                .participateCompanies(participateCompaniesCode) //참여가능한 기업 리스트
+                .enable(true)   //모임 종료, 모임 취소, 모임 삭제시 : 0으로 바꾸기
                 .build();
         categoryMeetingListRepository.save(categoryMeetingList);
     }
+
+
 
     // 모임 취소, 모임종료, 모임삭제시, enable을 0으로 바꾸는 코드
     @Transactional(readOnly = false)
     @Override
     public void disableMeetingCategory(Long meetingId) {
-        CategoryMeetingList categoryMeetingList = categoryMeetingListRepository.findById(meetingId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 모임의 카테고리가 존재하지 않습니다."));
-        categoryMeetingList.disable();
+        List<CategoryMeetingList> categoryMeetingLists = categoryMeetingListRepository.findByMeetingId(meetingId);  //meetingId로 카테고리 모임 리스트를 가져옴
+        for (CategoryMeetingList categoryMeetingList : categoryMeetingLists) {  //카테고리 모임 리스트를 하나씩 가져와서
+            categoryMeetingList.disable();  //enable을 0으로 바꿈
+        }
     }
 
     // 유저 관심사 변경
@@ -271,6 +276,7 @@ public class CategoryServiceImpl implements CategoryService{
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
 
 }
 
