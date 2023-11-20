@@ -2,6 +2,7 @@ package com.moa.category.application;
 
 import com.moa.category.domain.*;
 import com.moa.category.dto.CategoryMeetingGetDto;
+import com.moa.category.dto.MeetingDetailGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.infrastructure.ThemeCategoryRepository;
@@ -25,11 +26,39 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceImpl implements CategoryService{
-    private final JPAQueryFactory jpaQueryFactory;
     private final ThemeCategoryRepository themeCategoryRepository;
     private final UserInterestRepository userInterestRepository;
     private final CategoryMeetingListRepository categoryMeetingListRepository;
 
+
+    public MeetingDetailGetDto getMeetingId(Long id) {
+        Optional<CategoryMeetingList> meetingListOpt = categoryMeetingListRepository.findById(id);
+
+        if (!meetingListOpt.isPresent()) {
+            throw new IllegalArgumentException("해당 모임이 존재하지 않습니다.");
+        }
+
+        CategoryMeetingList meetingList = meetingListOpt.get();
+
+        // 회의가 활성화되어 있는지 확인
+        boolean isEnabled = meetingList.getEnable();
+
+        if (!isEnabled) {
+            throw new IllegalStateException("이 회의는 현재 활성화되어 있지 않습니다.");
+        }
+
+        // Enum에서 title을 가져옵니다.
+        String participateGenderTitle = meetingList.getParticipateGender().getTitle();
+
+        MeetingDetailGetDto meetingDetailGetDto = MeetingDetailGetDto.builder()
+                .meetingId(meetingList.getMeetingId())
+                .maxAge(meetingList.getMaxAge())
+                .minAge(meetingList.getMinAge())
+                .participateGender(participateGenderTitle) // Enum의 title을 사용합니다.
+                .build();
+
+        return meetingDetailGetDto;
+    }
 
     // 카테고리 선택 화면을 위해서 상위카테고리들아래에 하위카데고리들을 리스트로 묶어서 보내는 코드
     @Transactional(readOnly = true)

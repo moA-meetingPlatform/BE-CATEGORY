@@ -1,11 +1,8 @@
 package com.moa.category.dto;
 
 import com.moa.category.domain.enums.CanParticipateGender;
-import com.moa.category.domain.enums.CompanyCategory;
 import lombok.*;
 
-import java.util.List;
-import java.util.Set;
 
 @Builder
 @ToString
