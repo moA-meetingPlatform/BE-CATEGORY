@@ -1,5 +1,6 @@
 package com.moa.category.application;
 
+import com.moa.category.dto.CategoryMeetingCreateDto;
 import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.category.dto.MeetingDetailGetDto;
 import com.moa.category.dto.UserInterestGetDto;
@@ -21,7 +22,7 @@ public interface CategoryService {
 
     void createThemeCategory(CreateThemeCategoryIn createThemeCategoryIn);
 
-    void createMeetingCategory(CategoryMeetingGetDto categoryMeetingGetDto);
+    void createMeetingCategory(CategoryMeetingCreateDto categoryMeetingCreateDto);
 
     void disableMeetingCategory(Long meetingId);
 

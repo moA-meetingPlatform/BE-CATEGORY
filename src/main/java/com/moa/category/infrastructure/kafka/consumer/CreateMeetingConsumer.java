@@ -3,8 +3,10 @@ package com.moa.category.infrastructure.kafka.consumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moa.category.application.CategoryService;
 import com.moa.category.domain.enums.CanParticipateGender;
 import com.moa.category.dto.CategoryMeetingCreateDto;
+import com.moa.category.dto.CategoryMeetingGetDto;
 import com.moa.global.config.exception.CustomException;
 import com.moa.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,8 @@ import java.util.Map;
 public class CreateMeetingConsumer {
 
 	private final ObjectMapper objectMapper;
+	private final CategoryService categoryService;
+
 	@KafkaListener(topics = "meeting-create", groupId = "meeting-create")
 	public void consume(String message){
 		log.debug(String.format("Consumed message : %s", message));
@@ -39,7 +43,6 @@ public class CreateMeetingConsumer {
 
 		CategoryMeetingCreateDto dto = CategoryMeetingCreateDto.builder()
 			.categoryMeetingId(getLong(map.get("categoryMeetingId")))
-			.topCategoryId(getInteger(map.get("topCategoryId")))
 			.subCategoryId(getInteger(map.get("subCategoryId")))
 			.maxAge(getInteger(map.get("maxAge")))
 			.minAge(getInteger(map.get("minAge")))
@@ -48,6 +51,8 @@ public class CreateMeetingConsumer {
 			.build();
 
 		log.debug("dto : {}", dto.toString());
+
+		categoryService.createMeetingCategory(dto);
 
 	}
 

@@ -60,13 +60,13 @@ public class CategoryController {
         categoryService.updateUserInterests(modelMapper.map(userInterestsIn, UserInterestGetDto.class));
         return ResponseEntity.ok(ApiResult.ofSuccess(null));
     }
-    // 모임생성시 선택한 카테고리를 DB에 저장
-    @PostMapping("/meeting")
-    public ResponseEntity<?>createMeetingCategory(@RequestBody MeetingCategoryIn meetingCategoryIn){
-        categoryService.createMeetingCategory(modelMapper.map(meetingCategoryIn, CategoryMeetingGetDto.class));
-        return ResponseEntity.ok(ApiResult.ofSuccess(null));
-    }
-    // 모임 종료, 모임 취소, 모임 삭제시 : 0으로 바꾸기
+//    // 모임생성시 선택한 카테고리를 DB에 저장
+//    @PostMapping("/meeting")
+//    public ResponseEntity<?>createMeetingCategory(@RequestBody MeetingCategoryIn meetingCategoryIn){
+//        categoryService.createMeetingCategory(modelMapper.map(meetingCategoryIn, CategoryMeetingGetDto.class));
+//        return ResponseEntity.ok(ApiResult.ofSuccess(null));
+//    }
+//    // 모임 종료, 모임 취소, 모임 삭제시 : 0으로 바꾸기
     @PutMapping("/meeting")
     public ResponseEntity<?>disableMeetingCategory(@RequestBody DisableMeetingCategoryIn disableMeetingCategoryIn){
         categoryService.disableMeetingCategory(disableMeetingCategoryIn.getMeetingId());
