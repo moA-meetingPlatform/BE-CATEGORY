@@ -16,4 +16,5 @@ import java.util.Set;
 public interface CategoryMeetingListRepository extends JpaRepository<CategoryMeetingList,Long>, JpaSpecificationExecutor<CategoryMeetingList> {
     int countByTopCategoryIdAndEnableIsTrue(Integer topCategoryId);
 
+    List<CategoryMeetingList> findByMeetingId(Long meetingId);
 }

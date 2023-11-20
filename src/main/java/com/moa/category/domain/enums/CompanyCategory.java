@@ -29,4 +29,5 @@ public enum CompanyCategory  implements BaseEnum<Integer, String> {
         }
         throw new IllegalArgumentException("Invalid CompanyCategory code: " + code);
     }
+
 }
