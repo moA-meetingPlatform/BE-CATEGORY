@@ -3,12 +3,19 @@ import com.moa.category.application.CategoryService;
 import com.moa.category.domain.enums.CanParticipateGender;
 import com.moa.category.domain.enums.CompanyCategory;
 import com.moa.category.dto.CategoryMeetingGetDto;
+import com.moa.category.dto.MeetingDetailGetDto;
 import com.moa.category.dto.UserInterestGetDto;
 import com.moa.category.infrastructure.CategoryMeetingListRepository;
 import com.moa.category.vo.request.*;
 import com.moa.category.vo.response.CategoriesListOut;
+import com.moa.category.vo.response.MeetingDetailOut;
 import com.moa.category.vo.response.MeetingListOut;
 import com.moa.global.vo.ApiResult;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -94,6 +101,18 @@ public class CategoryController {
         MeetingListOut meetingListOut = categoryService.getMeetingListByCategory(userPreferences, categoryId);
 
         return ResponseEntity.ok(meetingListOut);
+    }
+    @Operation(summary = "모임 상세 조회", description = "모임 상세 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK",
+                    content = @Content(schema = @Schema(implementation = MeetingDetailOut.class))),
+            @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR")
+    })
+    @GetMapping("/meeting/{id}")
+    public ResponseEntity<ApiResult<MeetingDetailOut>> getMeetingListByCategory(@PathVariable Long id) {
+        MeetingDetailGetDto meetingDetailGetDto = categoryService.getMeetingId(id);	// 모임 조회
+        MeetingDetailOut response = modelMapper.map(meetingDetailGetDto, MeetingDetailOut.class);	// 모임 상세 조회 후 반환
+        return ResponseEntity.ok(ApiResult.ofSuccess(response));
     }
 
     private CanParticipateGender convertStringToGender(String genderString) {
